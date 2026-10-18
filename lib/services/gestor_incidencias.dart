@@ -6,6 +6,17 @@ class GestorIncidencias {
   List<Incidencia> incidencias = [];
   int cantidadPendientes = 0;
 
+  String normalizar(String texto) {
+    return texto
+        .trim()
+        .toLowerCase()
+        .replaceAll('á', 'a')
+        .replaceAll('é', 'e')
+        .replaceAll('í', 'i')
+        .replaceAll('ó', 'o')
+        .replaceAll('ú', 'u');
+  }
+
   Future<void> iniciar() async {
     incidencias = await datos.leer();
     cantidadPendientes =
@@ -13,8 +24,15 @@ class GestorIncidencias {
   }
 
   List<Incidencia> buscar(String texto) {
-    if (texto.trim().isEmpty) return incidencias;
-    return incidencias.where((x) => x.titulo.contains(texto)).toList();
+    texto = normalizar(texto);
+
+    if (texto.isEmpty) return incidencias;
+
+    return incidencias
+        .where((x) =>
+            normalizar(x.titulo).contains(texto) ||
+            normalizar(x.descripcion).contains(texto))
+        .toList();
   }
 
   Incidencia? porId(String id) {
