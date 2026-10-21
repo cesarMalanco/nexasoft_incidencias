@@ -16,6 +16,16 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
   bool cargando = true;
   String? error;
   String busqueda = '';
+  String filtroEstado = 'Todos';
+  String filtroPrioridad = 'Todas';
+
+  final controladorBusqueda = TextEditingController();
+
+  @override
+  void dispose() {
+    controladorBusqueda.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -101,7 +111,10 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
 
   @override
   Widget build(BuildContext context) {
-    final items = g.buscar(busqueda);
+    final items = g.buscar(busqueda).where((item) {
+      return (filtroEstado == 'Todos' || item.estado == filtroEstado) &&
+          (filtroPrioridad == 'Todas' || item.prioridad == filtroPrioridad);
+    }).toList();
     return Scaffold(
       appBar: AppBar(
         title: const Text('NexaSoft | Incidencias'),
@@ -180,6 +193,7 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 17, vertical: 5),
                           child: TextField(
+                            controller: controladorBusqueda,
                             decoration: const InputDecoration(
                               labelText: 'Buscar incidencias',
                               hintText: 'Ejemplo: WiFi, correo, pantalla',
@@ -192,11 +206,89 @@ class _PantallaPrincipalState extends State<PantallaPrincipal> {
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 4),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child: Text('${items.length} registros',
-                                style: const TextStyle(color: Colors.black54)),
+                            horizontal: 17,
+                            vertical: 5,
+                          ),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  key: ValueKey(filtroEstado),
+                                  initialValue: filtroEstado,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Estado',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                  items: [
+                                    'Todos',
+                                    'Pendiente',
+                                    'En proceso',
+                                    'Resuelta'
+                                  ]
+                                      .map((e) => DropdownMenuItem(
+                                            value: e,
+                                            child: Text(e),
+                                          ))
+                                      .toList(),
+                                  onChanged: (valor) {
+                                    setState(
+                                        () => filtroEstado = valor ?? 'Todos');
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Expanded(
+                                child: DropdownButtonFormField<String>(
+                                  key: ValueKey(filtroPrioridad),
+                                  initialValue: filtroPrioridad,
+                                  isExpanded: true,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Prioridad',
+                                    border: OutlineInputBorder(),
+                                    isDense: true,
+                                  ),
+                                  items: ['Todas', 'Baja', 'Media', 'Alta']
+                                      .map((p) => DropdownMenuItem(
+                                            value: p,
+                                            child: Text(p),
+                                          ))
+                                      .toList(),
+                                  onChanged: (valor) {
+                                    setState(() =>
+                                        filtroPrioridad = valor ?? 'Todas');
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 17,
+                            vertical: 4,
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                '${items.length} registros',
+                                style: const TextStyle(color: Colors.black54),
+                              ),
+                              TextButton.icon(
+                                onPressed: () {
+                                  controladorBusqueda.clear();
+                                  setState(() {
+                                    busqueda = '';
+                                    filtroEstado = 'Todos';
+                                    filtroPrioridad = 'Todas';
+                                  });
+                                },
+                                icon: const Icon(Icons.close, size: 16),
+                                label: const Text('Limpiar filtros'),
+                              ),
+                            ],
                           ),
                         ),
                         Expanded(
